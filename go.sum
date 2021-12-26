@@ -96,12 +96,8 @@ github.com/neelance/sourcemap v0.0.0-20151028013722-8c68805598ab/go.mod h1:Qr6/a
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
-github.com/nymo-net/nymo v0.0.0-20211127044645-dadf62dc634c h1:eJXbBNtoGH1cQSY8Hrz9FLgbn4YluOK5Jz1gADccFTc=
-github.com/nymo-net/nymo v0.0.0-20211127044645-dadf62dc634c/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
-github.com/nymo-net/nymo v0.0.0-20211127065750-c3be3014d31b h1:C8H5wqovrS34Tsm1XKSTyKZk9N5ysq3FZPWvHnWpgR8=
-github.com/nymo-net/nymo v0.0.0-20211127065750-c3be3014d31b/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
-github.com/nymo-net/nymo v0.0.0-20211127070243-2b90dc80d7f3 h1:uC01bDaavyum7doNZWCD4exQw3CFOwekxb2D5lmvfrE=
-github.com/nymo-net/nymo v0.0.0-20211127070243-2b90dc80d7f3/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
+github.com/nymo-net/nymo v0.0.0-20220109024939-0cac7675c527 h1:Ma+XglP6N5gz6A98c5d8+6gWLb2zZtb+Lg550cd59Vg=
+github.com/nymo-net/nymo v0.0.0-20220109024939-0cac7675c527/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.12.1/go.mod h1:zj2OWP4+oCPe1qIXoGWkgMRwljMUYCdkwsT2108oapk=
 github.com/onsi/ginkgo v1.14.0/go.mod h1:iSB4RoI2tjJc9BBv4NKIKWKya62Rps+oPG/Lv9klQyY=

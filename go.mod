@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/mattn/go-sqlite3 v1.14.9
-	github.com/nymo-net/nymo v0.0.0-20211127070243-2b90dc80d7f3
+	github.com/nymo-net/nymo v0.0.0-20220109024939-0cac7675c527
 )
 
 require (
