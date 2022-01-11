@@ -3,8 +3,11 @@ module github.com/nymo-net/nymo-webui
 go 1.17
 
 require (
+	github.com/BurntSushi/toml v0.3.1
+	github.com/gorilla/websocket v1.4.2
 	github.com/mattn/go-sqlite3 v1.14.9
-	github.com/nymo-net/nymo v0.0.0-20220109024939-0cac7675c527
+	github.com/nymo-net/nymo v0.0.0-20220111161918-c8e77529970c
+	github.com/sirupsen/logrus v1.8.1
 )
 
 require (

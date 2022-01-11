@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"database/sql"
-	"log"
 
 	"github.com/nymo-net/nymo"
 	"github.com/nymo-net/nymo/pb"
@@ -214,7 +213,7 @@ func (p *peerHandle) ListPeers(size uint) []*pb.Digest {
 }
 
 func (p *peerHandle) Disconnect(err error) {
-	log.Printf("[DISCONNECT] err: %s", err)
+	log.WithError(err).Debug("[webui] peer disconnected")
 }
 
 type peerEnum struct {
@@ -251,7 +250,6 @@ func (p *peerEnum) Next(err error) bool {
 }
 
 func (p *peerEnum) Connect(id []byte, cohort uint32) nymo.PeerHandle {
-	log.Printf("[CONNECT] %x", id)
 	_, err := p.db.Exec("UPDATE `peer_link` SET `cohort`=? WHERE `url_hash`=?", cohort, p.hash)
 	if err != nil {
 		log.Panic(err)
@@ -260,7 +258,7 @@ func (p *peerEnum) Connect(id []byte, cohort uint32) nymo.PeerHandle {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Printf("[CONNECTED] %x", id)
+	log.WithField("id", id).Debug("peer connected")
 	return &peerHandle{
 		db:  p.db,
 		row: rowId,

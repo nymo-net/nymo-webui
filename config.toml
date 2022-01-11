@@ -1,0 +1,26 @@
+# HTTP server listen address
+listen_addr = "127.0.0.1:6966"
+
+# SQLite 3 database path
+database = "./nymo.db"
+
+[peer] # peer connection related
+# Path to TLS Certificate in PEM
+tls_cert = "./nymo.crt"
+
+# Path to TLS Private Key in PEM
+tls_key = "./nymo.key"
+
+# Server listen addresses
+listen_servers = [
+  "tcp://127.0.0.1:8889",
+]
+
+# Bootstrap peers to connect to
+bootstrap_peers = []
+
+[core] # nymo-core part
+# max_concurrent_conn = 10
+# list_message_time = "5m"
+# scan_peer_time = "30s"
+# peer_retry_time = "1m"

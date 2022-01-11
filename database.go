@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"log"
 	"os"
 	"sync"
 
@@ -34,12 +33,11 @@ func (db *database) MessageStat(cohort uint32) (uint, uint) {
 }
 
 func (db *database) ClientHandle(id []byte) nymo.PeerHandle {
-	log.Printf("[CLIENT CONNECT] %x", id)
 	rowId, err := getPeerRowId(db.DB, id)
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Printf("[CLIENT CONNECTED] %x", id)
+	log.WithField("id", id).Debug("[webui] client connected")
 	return &peerHandle{db: db.DB, row: rowId}
 }
 
@@ -117,12 +115,16 @@ func (db *database) StoreMessage(hash []byte, c *pb.MsgContainer, f func() (coho
 }
 
 func (db *database) StoreDecryptedMessage(message *nymo.Message) {
-	// TODO notify webui
 	_, err := db.Exec("INSERT INTO `dec_msg` VALUES (?,?,?)",
 		message.Sender.Bytes(), message.Content, message.SendTime.UnixMilli())
 	if err != nil {
 		log.Panic(err)
 	}
+	go web.broadcast("recv_msg", recvMessage{
+		Sender:   message.Sender.String(),
+		SendTime: message.SendTime,
+		Content:  message.Content,
+	})
 }
 
 func (db *database) getUserKey() ([]byte, error) {

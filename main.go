@@ -2,115 +2,76 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
-	"fmt"
-	"log"
-	"math/big"
+	stdlog "log"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 
 	"github.com/nymo-net/nymo"
+	"github.com/sirupsen/logrus"
 )
-
-const (
-	certPath = "./nymo.crt"
-	keyPath  = "./nymo.key"
-	dbPath   = "./nymo.db"
-)
-
-func help() {
-	fmt.Fprintln(os.Stderr, "Usage: nymo [address]")
-	os.Exit(1)
-}
-
-func init() {
-	if len(os.Args) < 2 {
-		help()
-	}
-
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		key, err := nymo.GenerateUser()
-		if err != nil {
-			log.Panic(err)
-		}
-		err = createDatabase(dbPath, key)
-		if err != nil {
-			log.Panic(err)
-		}
-	}
-
-	if _, err := os.Stat(certPath); os.IsNotExist(err) {
-		key, err := rsa.GenerateKey(rand.Reader, 2048)
-		if err != nil {
-			log.Panic(err)
-		}
-		cert, err := x509.CreateCertificate(rand.Reader, &x509.Certificate{
-			SerialNumber: big.NewInt(0),
-		}, &x509.Certificate{}, &key.PublicKey, key)
-		if err != nil {
-			log.Panic(err)
-		}
-		certFile, err := os.Create(certPath)
-		if err != nil {
-			log.Panic(err)
-		}
-		defer certFile.Close()
-
-		err = pem.Encode(certFile, &pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: cert,
-		})
-		if err != nil {
-			log.Panic(err)
-		}
-
-		keyFile, err := os.Create(keyPath)
-		if err != nil {
-			log.Panic(err)
-		}
-		defer keyFile.Close()
-
-		err = pem.Encode(keyFile, &pem.Block{
-			Type:  "RSA PRIVATE KEY",
-			Bytes: x509.MarshalPKCS1PrivateKey(key),
-		})
-		if err != nil {
-			log.Panic(err)
-		}
-	}
-}
 
 func main() {
-	pair, err := tls.LoadX509KeyPair(certPath, keyPath)
+	pair, err := tls.LoadX509KeyPair(config.Peer.TLSCert, config.Peer.TLSKey)
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 
-	db, err := openDatabase(dbPath)
+	web.db, err = openDatabase(config.Database)
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
-	defer db.Close()
+	defer web.db.Close()
 
-	key, err := db.getUserKey()
+	key, err := web.db.getUserKey()
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
-	user := nymo.OpenUser(db, key, pair, nil)
+	web.user = nymo.OpenUser(web.db, key, pair, getCoreConfig())
+	log.Infof("[core] opened user %s", web.user.Address())
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
+	var wg sync.WaitGroup
+
+	for _, addr := range config.Peer.ListenServers {
+		wg.Add(1)
+		go func(a string) {
+			defer wg.Done()
+			log.Infof("[core] listening on %s", a)
+			if err := web.user.RunServer(ctx, a); err != http.ErrServerClosed {
+				log.Fatal(err)
+			}
+		}(addr)
+	}
+
+	wg.Add(1)
 	go func() {
-		if err := user.RunServer(ctx, os.Args[1]); err != http.ErrServerClosed {
-			log.Panic(err)
+		defer wg.Done()
+		web.user.Run(ctx)
+	}()
+
+	errLogger := log.WriterLevel(logrus.ErrorLevel)
+	defer errLogger.Close()
+	srv := http.Server{
+		Addr:     config.ListenAddr,
+		Handler:  &web.m,
+		ErrorLog: stdlog.New(errLogger, "[webui] ", 0),
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Infof("[webui] listening on http://%s", srv.Addr)
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatal(err)
 		}
 	}()
 
-	fmt.Println("Address:", user.Address())
-	user.Run(ctx)
+	<-ctx.Done()
+	_ = srv.Close()
+	wg.Wait()
 }
