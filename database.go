@@ -128,7 +128,7 @@ func (db *database) StoreDecryptedMessage(message *nymo.Message) {
 }
 
 func (db *database) getUserKey() ([]byte, error) {
-	query, err := db.Query("SELECT `key` FROM `user` WHERE ROWID=1")
+	query, err := db.Query("SELECT `key` FROM `user` WHERE `rowid`=1")
 	if err != nil {
 		return nil, err
 	}
@@ -183,6 +183,7 @@ func createDatabase(path string, der []byte) error {
 // language=sql
 const schema = `CREATE TABLE "user"
 (
+	"rowid" INTEGER PRIMARY KEY,
 	"key" BLOB PRIMARY KEY,
 	"alias" TEXT
 );
@@ -200,6 +201,14 @@ CREATE TABLE "dec_msg"
 	"sender" BLOB NOT NULL,
 	"content" TEXT NOT NULL,
 	"send_time" INTEGER NOT NULL
+);
+
+CREATE TABLE "send_msg"
+(
+	"receiver" INTEGER NOT NULL
+		REFERENCES "user" ON UPDATE CASCADE ON DELETE CASCADE,
+	"content" TEXT NOT NULL,
+	"send_time" INTEGER
 );
 
 CREATE TABLE "message"

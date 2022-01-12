@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"sync"
 
@@ -82,6 +83,10 @@ func (w *webui) websocketHandle(conn *websocket.Conn, msgChan chan baseClient) {
 		switch action {
 		case "new_msg":
 			err = w.newMessage(msg[1])
+		case "alias":
+			err = w.setAlias(msg[1])
+		default:
+			err = errors.New("unknown op str")
 		}
 		if err != nil {
 			log.Warnf("[webui] websocket process: %s", err)
