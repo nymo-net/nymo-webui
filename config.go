@@ -135,20 +135,26 @@ func init() {
 	s := flag.String("config", "config.toml", "config file path")
 	flag.Parse()
 
+	log.Formatter = &logrus.TextFormatter{
+		ForceColors:            true,
+		DisableTimestamp:       true,
+		DisableLevelTruncation: true,
+	}
+
 	_, err := toml.DecodeFile(*s, &config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if notExists(config.Database) {
-		log.Info("[webui] database not found, creating a new one.")
+		log.Warn("[webui] database not found, creating a new one.")
 		if err := createDB(); err != nil {
 			log.Fatal(err)
 		}
 	}
 
 	if notExists(config.Peer.TLSCert) || notExists(config.Peer.TLSKey) {
-		log.Info("[webui] TLS key pair not found, creating a new one.")
+		log.Warn("[webui] TLS key pair not found, creating a new one.")
 		if err := createTLSKeyPair(); err != nil {
 			log.Fatal(err)
 		}

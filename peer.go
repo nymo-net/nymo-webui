@@ -9,19 +9,10 @@ import (
 )
 
 func getPeerRowId(db *sql.DB, id []byte) (uint, error) {
-	_, err := db.Exec("INSERT OR IGNORE INTO `peer` (`id`) VALUES (?)", id)
-	if err != nil {
-		return 0, err
-	}
-
-	row := db.QueryRow("SELECT `rowid` FROM `peer` WHERE `id`=?", id)
-	if row.Err() != nil {
-		log.Panic(row.Err())
-	}
-
-	var rowid uint
-	err = row.Scan(&rowid)
-	return rowid, err
+	row, _, err := insertOrIgnore(db,
+		"INSERT OR IGNORE INTO `peer` (`id`) VALUES (?)",
+		"SELECT `rowid` FROM `peer` WHERE `id`=?", id)
+	return row, err
 }
 
 func digestToTable(tx *sql.Tx, digests []*pb.Digest) {
@@ -213,7 +204,9 @@ func (p *peerHandle) ListPeers(size uint) []*pb.Digest {
 }
 
 func (p *peerHandle) Disconnect(err error) {
-	log.WithError(err).Debug("[webui] peer disconnected")
+	// TODO penalize
+	web.peer.Delete(p.row)
+	log.WithError(err).Debug("[core] peer disconnected")
 }
 
 type peerEnum struct {
@@ -258,7 +251,8 @@ func (p *peerEnum) Connect(id []byte, cohort uint32) nymo.PeerHandle {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.WithField("id", id).Debug("peer connected")
+	log.WithField("id", id).Debug("[core] peer connected")
+	web.peer.Store(rowId, p.url)
 	return &peerHandle{
 		db:  p.db,
 		row: rowId,

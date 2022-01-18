@@ -105,6 +105,14 @@ github.com/nymo-net/nymo v0.0.0-20220111050011-2ac7b8fcb610 h1:Jy7srEdLDNs+zhTyr
 github.com/nymo-net/nymo v0.0.0-20220111050011-2ac7b8fcb610/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
 github.com/nymo-net/nymo v0.0.0-20220111161918-c8e77529970c h1:tvXmFSALsS5rFojbC97c8/cz3SejluCvj9ZEAz4Q/zg=
 github.com/nymo-net/nymo v0.0.0-20220111161918-c8e77529970c/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
+github.com/nymo-net/nymo v0.0.0-20220117014012-27557a308695 h1:bMM71d20P7KXAtyBbonuyT5UrmU3WHAq1106Z/P1ht0=
+github.com/nymo-net/nymo v0.0.0-20220117014012-27557a308695/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
+github.com/nymo-net/nymo v0.0.0-20220117042201-2f8a51426b2b h1:FnteL+XjYGbNFFS97xQRvr95e6K6rrnUqaeJxQbNTdw=
+github.com/nymo-net/nymo v0.0.0-20220117042201-2f8a51426b2b/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
+github.com/nymo-net/nymo v0.0.0-20220117053217-ecea0292cd8e h1:TlyRzLcdIi6pf7c3qrCktdq0ao4cfGY8DadJBmM3Rj4=
+github.com/nymo-net/nymo v0.0.0-20220117053217-ecea0292cd8e/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
+github.com/nymo-net/nymo v0.0.0-20220117235719-be9f1cea0319 h1:DkXB2oG4qYXIn4C93wHTw4XHEgBNAiHGv5Oujej6+cI=
+github.com/nymo-net/nymo v0.0.0-20220117235719-be9f1cea0319/go.mod h1:Aikg38s76JOqwAa+H0V6xlZUJ76WZi6OIk7d9lST1ns=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.12.1/go.mod h1:zj2OWP4+oCPe1qIXoGWkgMRwljMUYCdkwsT2108oapk=
 github.com/onsi/ginkgo v1.14.0/go.mod h1:iSB4RoI2tjJc9BBv4NKIKWKya62Rps+oPG/Lv9klQyY=

@@ -13,6 +13,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func addPeer(addr string) {
+	query := web.db.QueryRow("SELECT COUNT(*) FROM `peer_link` WHERE `url`=?", addr)
+	if query.Err() != nil {
+		log.Fatal(query.Err())
+	}
+	var count uint
+	err := query.Scan(&count)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if count <= 0 {
+		web.user.AddPeer(addr)
+	}
+}
+
 func main() {
 	pair, err := tls.LoadX509KeyPair(config.Peer.TLSCert, config.Peer.TLSKey)
 	if err != nil {
@@ -31,6 +46,10 @@ func main() {
 	}
 	web.user = nymo.OpenUser(web.db, key, pair, getCoreConfig())
 	log.Infof("[core] opened user %s", web.user.Address())
+
+	for _, p := range config.Peer.BootstrapPeers {
+		addPeer(p)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

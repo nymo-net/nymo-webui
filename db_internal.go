@@ -1,15 +1,36 @@
 package main
 
-func (db *database) lookupUserId(key []byte) (uint, error) {
-	_, err := db.Exec("INSERT OR IGNORE INTO `user` (`key`) VALUES (?)", key)
+import "database/sql"
+
+func insertOrIgnore(db *sql.DB, ins, sel string, arg interface{}) (uint, bool, error) {
+	exec, err := db.Exec(ins, arg)
 	if err != nil {
-		return 0, err
+		return 0, false, err
 	}
-	row := db.QueryRow("SELECT `rowid` FROM `user` WHERE `key`=?", key)
+	affected, err := exec.RowsAffected()
+	if err != nil {
+		return 0, false, err
+	}
+	if affected != 0 {
+		insertId, err := exec.LastInsertId()
+		return uint(insertId), true, err
+	}
+
+	row := db.QueryRow(sel, arg)
 	if row.Err() != nil {
-		return 0, row.Err()
+		return 0, false, row.Err()
 	}
 	var id uint
 	err = row.Scan(&id)
+	return id, false, err
+}
+
+func (db *database) lookupUserId(key []byte) (uint, error) {
+	id, inserted, err := insertOrIgnore(db.DB,
+		"INSERT OR IGNORE INTO `user` (`key`) VALUES (?)",
+		"SELECT `rowid` FROM `user` WHERE `key`=?", key)
+	if inserted {
+		web.newUser(id, key)
+	}
 	return id, err
 }

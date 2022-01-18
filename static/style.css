@@ -1,0 +1,38 @@
+div.alert-container {
+    position: fixed;
+    top: 10vh;
+    right: 2rem;
+    z-index: 2050;
+}
+
+button > svg {
+    height: calc(1.3rem + .6vw);
+}
+
+header > h3 {
+    color: #EB4511;
+}
+
+main > div {
+    padding: 0;
+    overflow: auto;
+}
+
+button.list-group-item {
+    border: 0;
+    border-radius: 1em !important;
+}
+
+#chat-input {
+    resize: none;
+    height: 1em;
+}
+
+div#history > div > div {
+    width: fit-content;
+    max-width: calc(min(100%, 480px));
+}
+
+div.justify-content-end {
+    text-align: end;
+}

@@ -37,7 +37,8 @@ func (db *database) ClientHandle(id []byte) nymo.PeerHandle {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.WithField("id", id).Debug("[webui] client connected")
+	log.WithField("id", id).Debug("[core] client connected")
+	web.peer.Store(rowId, nil)
 	return &peerHandle{db: db.DB, row: rowId}
 }
 
@@ -115,20 +116,20 @@ func (db *database) StoreMessage(hash []byte, c *pb.MsgContainer, f func() (coho
 }
 
 func (db *database) StoreDecryptedMessage(message *nymo.Message) {
-	_, err := db.Exec("INSERT INTO `dec_msg` VALUES (?,?,?)",
-		message.Sender.Bytes(), message.Content, message.SendTime.UnixMilli())
+	target, err := db.lookupUserId(message.Sender.Bytes())
 	if err != nil {
 		log.Panic(err)
 	}
-	go web.broadcast("recv_msg", recvMessage{
-		Sender:   message.Sender.String(),
-		SendTime: message.SendTime,
-		Content:  message.Content,
-	})
+	_, err = db.Exec("INSERT INTO `dec_msg` VALUES (?,FALSE,?,?)",
+		target, message.Content, message.SendTime.UnixMilli())
+	if err != nil {
+		log.Panic(err)
+	}
+	go web.recvMessage(target, message.Content, message.SendTime)
 }
 
 func (db *database) getUserKey() ([]byte, error) {
-	query, err := db.Query("SELECT `key` FROM `user` WHERE `rowid`=1")
+	query, err := db.Query("SELECT `key` FROM `user` WHERE `rowid`=0")
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +175,7 @@ func createDatabase(path string, der []byte) error {
 
 	_, err = db.Exec(schema)
 	if err == nil {
-		_, err = db.Exec("INSERT INTO `user` (`key`) VALUES (?);", der)
+		_, err = db.Exec("INSERT INTO `user` (`rowid`, `key`) VALUES (0, ?);", der)
 	}
 
 	return err
@@ -184,29 +185,21 @@ func createDatabase(path string, der []byte) error {
 const schema = `CREATE TABLE "user"
 (
 	"rowid" INTEGER PRIMARY KEY,
-	"key" BLOB PRIMARY KEY,
+	"key" BLOB UNIQUE NOT NULL,
 	"alias" TEXT
 );
 
 CREATE TABLE "peer"
 (
 	"rowid" INTEGER PRIMARY KEY,
-	"id" BLOB NOT NULL
+	"id" BLOB UNIQUE NOT NULL
 );
-
-CREATE UNIQUE INDEX "peer_id_uindex" on "peer" ("id");
 
 CREATE TABLE "dec_msg"
 (
-	"sender" BLOB NOT NULL,
-	"content" TEXT NOT NULL,
-	"send_time" INTEGER NOT NULL
-);
-
-CREATE TABLE "send_msg"
-(
-	"receiver" INTEGER NOT NULL
+	"target" INTEGER NOT NULL
 		REFERENCES "user" ON UPDATE CASCADE ON DELETE CASCADE,
+	"self" BOOLEAN NOT NULL,
 	"content" TEXT NOT NULL,
 	"send_time" INTEGER
 );
@@ -214,14 +207,12 @@ CREATE TABLE "send_msg"
 CREATE TABLE "message"
 (
 	"rowid" INTEGER PRIMARY KEY,
-	"hash" BLOB NOT NULL,
+	"hash" BLOB UNIQUE NOT NULL,
 	"msg" BLOB,
 	"pow" INTEGER,
 	"cohort" INTEGER NOT NULL,
 	"deleted" BOOLEAN DEFAULT FALSE NOT NULL
 );
-
-CREATE UNIQUE INDEX "message_hash_uindex" on "message" ("hash");
 
 CREATE TABLE "peer_link"
 (
@@ -230,8 +221,6 @@ CREATE TABLE "peer_link"
 	"cohort" INTEGER NOT NULL,
 	"penalize" INTEGER DEFAULT 0 NOT NULL
 ) WITHOUT ROWID;
-
-CREATE INDEX "peer_link_cohort_index" ON "peer_link" ("cohort");
 
 CREATE TABLE "known_msg"
 (
