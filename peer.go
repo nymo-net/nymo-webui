@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"database/sql"
+	"encoding/hex"
 
 	"github.com/nymo-net/nymo"
 	"github.com/nymo-net/nymo/pb"
@@ -95,7 +96,7 @@ func (p *peerHandle) AddKnownMessages(digests []*pb.Digest) []*pb.Digest {
 	}
 
 	// 3. intermediate rowid table
-	_, err = tx.Exec("CREATE TEMP TABLE `interm` AS SELECT `rowid` FROM `message` WHERE `hash` IN (SELECT `hash` FROM `digest`)")
+	_, err = tx.Exec("CREATE TEMP TABLE `interm` AS SELECT `rowid` FROM `message` JOIN `digest` USING(`hash`)")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -107,7 +108,7 @@ func (p *peerHandle) AddKnownMessages(digests []*pb.Digest) []*pb.Digest {
 	}
 
 	// 5. find what we don't know
-	query, err := tx.Query("SELECT `hash`, `cohort` FROM `message` WHERE (NOT `deleted`) AND (`msg` IS NULL) AND `rowid` IN (SELECT `rowid` FROM `interm`)")
+	query, err := tx.Query("SELECT `hash`, `cohort` FROM `message` JOIN `interm` USING(`rowid`) WHERE (NOT `deleted`) AND (`msg` IS NULL)")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -251,7 +252,7 @@ func (p *peerEnum) Connect(id []byte, cohort uint32) nymo.PeerHandle {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.WithField("id", id).Debug("[core] peer connected")
+	log.WithField("id", hex.EncodeToString(id)).Debug("[core] peer connected")
 	web.peer.Store(rowId, p.url)
 	return &peerHandle{
 		db:  p.db,

@@ -34,8 +34,9 @@ func (d *duration) UnmarshalText(text []byte) error {
 }
 
 type tomlConfig struct {
-	ListenAddr string `toml:"listen_addr"`
-	Database   string `toml:"database"`
+	ListenAddr string       `toml:"listen_addr"`
+	Database   string       `toml:"database"`
+	LogLevel   logrus.Level `toml:"log_level"`
 
 	Peer struct {
 		TLSCert        string   `toml:"tls_cert"`
@@ -65,9 +66,8 @@ func createTLSKeyPair() (e error) {
 	if err != nil {
 		return err
 	}
-	cert, err := x509.CreateCertificate(rand.Reader, &x509.Certificate{
-		SerialNumber: big.NewInt(0),
-	}, &x509.Certificate{}, &key.PublicKey, key)
+	ca := &x509.Certificate{SerialNumber: big.NewInt(1)}
+	cert, err := x509.CreateCertificate(rand.Reader, ca, ca, &key.PublicKey, key)
 	if err != nil {
 		return err
 	}
@@ -145,6 +145,7 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.SetLevel(config.LogLevel)
 
 	if notExists(config.Database) {
 		log.Warn("[webui] database not found, creating a new one.")

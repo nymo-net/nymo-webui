@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"os"
 	"sync"
@@ -37,7 +38,7 @@ func (db *database) ClientHandle(id []byte) nymo.PeerHandle {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.WithField("id", id).Debug("[core] client connected")
+	log.WithField("id", hex.EncodeToString(id)).Debug("[core] client connected")
 	web.peer.Store(rowId, nil)
 	return &peerHandle{db: db.DB, row: rowId}
 }

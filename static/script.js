@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const alert = htmlToElement(`<div class="alert alert-danger alert-dismissible fade show" role="alert">
 ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`);
         alert_container.prepend(alert);
-        setTimeout(() => new bootstrap.Alert(alert).close(), timeout);
+        setTimeout(new bootstrap.Alert(alert).close, timeout);
     }
 
     ws.register('err', create_alert);
@@ -35,7 +35,7 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
     });
 
     ws.register('new_msg', function ({target, content}) {
-        const ele = document.querySelector(`button.list-group-item[data-id="${target}"]`);
+        const ele = contacts.querySelector(`button.list-group-item[data-id="${target}"]`);
         if (ele.classList.contains('active'))
             history.insertAdjacentHTML('afterbegin', content);
         contacts.prepend(ele);
@@ -118,7 +118,7 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
             if (input?.tagName !== 'INPUT') return;
             target = input.value.trim();
             input.value = '';
-            const ele = document.querySelector(`button.list-group-item[data-addr="${target}"]`);
+            const ele = contacts.querySelector(`button.list-group-item[data-addr="${target}"]`);
             if (ele) ele.click();
             else last_target = target;
         }
@@ -135,7 +135,7 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
     });
 
     ws.register('alias', function (data) {
-        const ele = document.querySelector(`button.list-group-item[data-id="${data.id}"]`);
+        const ele = contacts.querySelector(`button.list-group-item[data-id="${data.id}"]`);
         if (!ele) return;
 
         if (!data.name) delete ele.dataset.alias;
