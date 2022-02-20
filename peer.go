@@ -253,7 +253,7 @@ func (p *peerEnum) Connect(id []byte, cohort uint32) nymo.PeerHandle {
 		log.Panic(err)
 	}
 	log.WithField("id", hex.EncodeToString(id)).Debug("[core] peer connected")
-	web.peer.Store(rowId, p.url)
+	web.peer.Store(rowId, id)
 	return &peerHandle{
 		db:  p.db,
 		row: rowId,

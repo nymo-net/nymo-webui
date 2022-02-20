@@ -16,7 +16,7 @@ tls_key = "./nymo.key"
 
 # Server listen addresses
 listen_servers = [
-  "tcp://127.0.0.1:8889",
+  {addr = "tcp://127.0.0.1:8889", upnp = false},
 ]
 
 # Bootstrap peers to connect to
@@ -27,3 +27,5 @@ bootstrap_peers = []
 # list_message_time = "5m"
 # scan_peer_time = "30s"
 # peer_retry_time = "1m"
+enable_lp_announcement = true
+enable_lp_discovery = true

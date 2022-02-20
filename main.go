@@ -58,13 +58,18 @@ func main() {
 
 	for _, addr := range config.Peer.ListenServers {
 		wg.Add(1)
-		go func(a string) {
+		go func(a string, u bool) {
 			defer wg.Done()
+			f := web.user.RunServer
+			if u {
+				f = web.user.RunServerUpnp
+			}
+
 			log.Infof("[core] listening on %s", a)
-			if err := web.user.RunServer(ctx, a); err != http.ErrServerClosed {
+			if err := f(ctx, a); err != http.ErrServerClosed {
 				log.Fatal(err)
 			}
-		}(addr)
+		}(addr.Addr, addr.Upnp)
 	}
 
 	wg.Add(1)
@@ -91,6 +96,7 @@ func main() {
 	}()
 
 	<-ctx.Done()
+	log.Warn("Shutting down...")
 	_ = srv.Close()
 	wg.Wait()
 }

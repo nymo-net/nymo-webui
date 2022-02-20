@@ -39,9 +39,12 @@ type tomlConfig struct {
 	LogLevel   logrus.Level `toml:"log_level"`
 
 	Peer struct {
-		TLSCert        string   `toml:"tls_cert"`
-		TLSKey         string   `toml:"tls_key"`
-		ListenServers  []string `toml:"listen_servers"`
+		TLSCert       string `toml:"tls_cert"`
+		TLSKey        string `toml:"tls_key"`
+		ListenServers []struct {
+			Addr string `toml:"addr"`
+			Upnp bool   `toml:"upnp"`
+		} `toml:"listen_servers"`
 		BootstrapPeers []string `toml:"bootstrap_peers"`
 	} `toml:"peer"`
 
@@ -50,6 +53,8 @@ type tomlConfig struct {
 		ListMessageTime   *duration `toml:"list_message_time"`
 		ScanPeerTime      *duration `toml:"scan_peer_time"`
 		PeerRetryTime     *duration `toml:"peer_retry_time"`
+		EnableLpa         bool      `toml:"enable_lp_announcement"`
+		EnableLpd         bool      `toml:"enable_lp_discovery"`
 	} `toml:"core"`
 }
 
@@ -121,6 +126,8 @@ func getCoreConfig() *nymo.Config {
 	if config.Core.PeerRetryTime != nil {
 		cfg.PeerRetryTime = time.Duration(*config.Core.PeerRetryTime)
 	}
+	cfg.LocalPeerAnnounce = config.Core.EnableLpa
+	cfg.LocalPeerDiscover = config.Core.EnableLpd
 	// XXX: writer no close
 	cfg.Logger = stdlog.New(log.WriterLevel(logrus.ErrorLevel), "[core] ", 0)
 	return cfg
