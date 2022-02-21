@@ -20,6 +20,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const chat_title = document.querySelector('div.card-header > h3');
     const alert_container = document.querySelector('div.alert-container');
 
+    const status_modal = document.getElementById('status');
+    const modal_comp = new bootstrap.Modal(status_modal);
+
+    const address_field = document.getElementById('nymo-address');
+    const servers_list = document.getElementById('servers');
+    const peers_list = document.getElementById('peers');
+
     function create_alert(content, timeout = 3000) {
         const alert = htmlToElement(`<div class="alert alert-danger alert-dismissible fade show" role="alert">
 ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`);
@@ -49,7 +56,27 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
         history.querySelector(`div.justify-content-end[data-id="${data.id}"]`)?.remove();
         if (data.content)
             history.insertAdjacentHTML('afterbegin', data.content);
-    })
+    });
+
+    ws.register('meta', function ({address, servers, peers}) {
+        address_field.innerText = address;
+        address_field.href = address;
+        servers_list.innerHTML = '';
+        servers?.forEach(e => {
+            const li = document.createElement('li');
+            li.classList.add('list-group-item');
+            li.innerText = e;
+            servers_list.append(li);
+        });
+        peers_list.innerHTML = '';
+        peers?.forEach(e => {
+            const li = document.createElement('li');
+            li.classList.add('list-group-item');
+            li.innerText = e;
+            peers_list.append(li);
+        });
+        modal_comp.show();
+    });
 
     function update_name(btn) {
         if (btn.dataset.alias) {
@@ -125,6 +152,10 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
         chat_input.value = '';
         chat_input.style.height = '1em';
         ws.send('new_msg', {target: target, content: val});
+    });
+
+    document.getElementById('info-btn').addEventListener('click', function () {
+        ws.send('meta');
     });
 
     document.getElementById('add-btn').addEventListener('click', function () {

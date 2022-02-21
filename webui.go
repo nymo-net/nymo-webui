@@ -100,7 +100,16 @@ func (w *webui) websocketHandle(conn *websocket.Conn, msgChan chan baseClient) {
 				msgChan <- baseClient{"history", his}
 			}
 		case "meta":
-			msgChan <- baseClient{"meta", metadata{Address: w.user.Address().String()}}
+			m := metadata{
+				Address: w.user.Address().String(),
+				Servers: w.user.ListServers(),
+			}
+			w.peer.Range(func(_, value interface{}) bool {
+				m.Peers = append(m.Peers, value.(string))
+				return true
+			})
+
+			msgChan <- baseClient{"meta", m}
 		default:
 			err = errors.New("unknown op str")
 		}

@@ -38,8 +38,9 @@ func (db *database) ClientHandle(id []byte) nymo.PeerHandle {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.WithField("id", hex.EncodeToString(id)).Debug("[core] client connected")
-	web.peer.Store(rowId, id)
+	encoded := hex.EncodeToString(id)
+	log.WithField("id", encoded).Debug("[core] client connected")
+	web.peer.Store(rowId, encoded)
 	return &peerHandle{db: db.DB, row: rowId}
 }
 

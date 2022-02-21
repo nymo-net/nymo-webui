@@ -5,7 +5,7 @@ const ws = new WebSocket(((loc.protocol === "https:") ? "wss://" : "ws://") + lo
 const handles = {'err': console.error};
 
 ws.onclose = function (ce) {
-    handles.err(ce.reason);
+    handles.err(`Websocket connection closed, code ${ce.code}.`);
 }
 
 ws.onmessage = function ({data}) {

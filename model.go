@@ -43,7 +43,9 @@ type setAlias struct {
 }
 
 type metadata struct {
-	Address string `json:"address"`
+	Address string   `json:"address"`
+	Peers   []string `json:"peers"`
+	Servers []string `json:"servers"`
 }
 
 type msgSent struct {
