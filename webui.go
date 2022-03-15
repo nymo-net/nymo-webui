@@ -30,7 +30,6 @@ var (
 	web      = webui{wsHandler: make(map[*websocket.Conn]chan<- baseClient)}
 	indexTpl = template.Must(template.New("index.gohtml").Funcs(template.FuncMap{
 		"convertAddr": nymo.ConvertAddrToStr,
-		"htmlEscape":  template.HTMLEscapeString,
 	}).ParseFiles("./view/index.gohtml"))
 )
 

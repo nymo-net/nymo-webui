@@ -60,9 +60,11 @@ func main() {
 		wg.Add(1)
 		go func(a string, u bool) {
 			defer wg.Done()
-			f := web.user.RunServer
-			if u {
-				f = web.user.RunServerUpnp
+			f := web.user.RunServerUpnp
+			if !u {
+				f = func(ctx context.Context, serverAddr string) error {
+					return web.user.RunServer(ctx, serverAddr, serverAddr[6:])
+				}
 			}
 
 			log.Infof("[core] listening on %s", a)

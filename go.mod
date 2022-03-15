@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.0.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/mattn/go-sqlite3 v1.14.11
-	github.com/nymo-net/nymo v0.0.0-20220220212140-b5f16eca7918
+	github.com/nymo-net/nymo v0.0.0-20220315062441-6c796f71bad1
 	github.com/sirupsen/logrus v1.8.1
 )
 

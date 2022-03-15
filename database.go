@@ -17,20 +17,12 @@ type database struct {
 	storeLock sync.Mutex
 }
 
-func (db *database) MessageStat(cohort uint32) (uint, uint) {
-	row := db.QueryRow(
-		"SELECT COUNT(CASE WHEN `cohort`=? THEN 1 END), COUNT(*) FROM `message` WHERE `msg` IS NOT NULL", cohort)
-	if row.Err() != nil {
-		log.Panic(row.Err())
-	}
-
-	var in, total uint
-	err := row.Scan(&in, &total)
+func (db *database) IgnoreMessage(digest *pb.Digest) {
+	_, err := db.Exec("INSERT INTO `message` (`hash`,`cohort`,`deleted`) VALUES(?,?,TRUE)",
+		digest.Hash, digest.Cohort)
 	if err != nil {
 		log.Panic(err)
 	}
-
-	return in, total - in
 }
 
 func (db *database) ClientHandle(id []byte) nymo.PeerHandle {
@@ -112,8 +104,8 @@ func (db *database) StoreMessage(hash []byte, c *pb.MsgContainer, f func() (coho
 		return err
 	}
 
-	_, err = db.Exec("REPLACE INTO `message` (`hash`,`msg`,`pow`,`cohort`) VALUES (?,?,?,?)",
-		hash, c.Msg, c.Pow, cohort)
+	_, err = db.Exec("INSERT INTO `message` (`hash`,`msg`,`pow`,`cohort`) VALUES (?,?,?,?) ON CONFLICT DO UPDATE SET `msg`=?,`pow`=?,`cohort`=?",
+		hash, c.Msg, c.Pow, cohort, c.Msg, c.Pow, cohort)
 	return err
 }
 

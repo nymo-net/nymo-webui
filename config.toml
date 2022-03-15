@@ -5,7 +5,7 @@ listen_addr = "127.0.0.1:6966"
 database = "./nymo.db"
 
 # logging level
-log_level = "debug"
+log_level = "info"
 
 [peer] # peer connection related
 # Path to TLS Certificate in PEM
@@ -15,17 +15,18 @@ tls_cert = "./nymo.crt"
 tls_key = "./nymo.key"
 
 # Server listen addresses
-listen_servers = [
-  {addr = "tcp://127.0.0.1:8889", upnp = false},
-]
+listen_servers = []
 
 # Bootstrap peers to connect to
-bootstrap_peers = []
+bootstrap_peers = [
+  "udp://129.153.228.113:443",
+  "tcp://129.153.228.113:443",
+]
 
 [core] # nymo-core part
 # max_concurrent_conn = 10
 # list_message_time = "5m"
 # scan_peer_time = "30s"
 # peer_retry_time = "1m"
-enable_lp_announcement = true
-enable_lp_discovery = true
+# enable_lp_announcement = true
+# enable_lp_discovery = true
