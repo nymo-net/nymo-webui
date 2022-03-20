@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const address_field = document.getElementById('nymo-address');
     const servers_list = document.getElementById('servers');
     const peers_list = document.getElementById('peers');
+    const version_text = status_modal.getElementsByClassName('text-center')[0];
 
     function create_alert(content, timeout = 3000) {
         const alert = htmlToElement(`<div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -58,7 +59,8 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
             history.insertAdjacentHTML('afterbegin', data.content);
     });
 
-    ws.register('meta', function ({address, servers, peers}) {
+    ws.register('meta', function ({version, address, servers, peers}) {
+        version_text.innerText = version;
         address_field.innerText = address;
         address_field.href = address;
         servers_list.innerHTML = '';

@@ -17,13 +17,13 @@ func getPeerRowId(db *sql.DB, id []byte) (uint, error) {
 }
 
 func digestToTable(tx *sql.Tx, digests []*pb.Digest) {
-	_, err := tx.Exec("CREATE TEMP TABLE `digest` (`hash` BLOB PRIMARY KEY, `cohort` INTEGER) WITHOUT ROWID")
+	_, err := tx.Exec("CREATE TEMP TABLE `digest` (`hash` BLOB, `cohort` INTEGER, PRIMARY KEY (`hash`,`cohort`)) WITHOUT ROWID")
 	if err != nil {
 		log.Panic(err)
 	}
 
 	var sqlStr bytes.Buffer
-	sqlStr.WriteString("INSERT INTO `digest` VALUES")
+	sqlStr.WriteString("INSERT OR IGNORE INTO `digest` VALUES")
 	var vals []interface{}
 
 	for _, d := range digests {
@@ -96,7 +96,7 @@ func (p *peerHandle) AddKnownMessages(digests []*pb.Digest) []*pb.Digest {
 	}
 
 	// 3. intermediate rowid table
-	_, err = tx.Exec("CREATE TEMP TABLE `interm` AS SELECT `rowid` FROM `message` JOIN `digest` USING(`hash`)")
+	_, err = tx.Exec("CREATE TEMP TABLE `interm` AS SELECT `rowid` FROM `message` NATURAL JOIN `digest`")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -243,16 +243,16 @@ func (p *peerEnum) Next(err error) bool {
 	return false
 }
 
-func (p *peerEnum) Connect(id []byte, cohort uint32) nymo.PeerHandle {
+func (p *peerEnum) Connect(id [8]byte, cohort uint32) nymo.PeerHandle {
 	_, err := p.db.Exec("UPDATE `peer_link` SET `cohort`=? WHERE `url_hash`=?", cohort, p.hash)
 	if err != nil {
 		log.Panic(err)
 	}
-	rowId, err := getPeerRowId(p.db, id)
+	rowId, err := getPeerRowId(p.db, id[:])
 	if err != nil {
 		log.Panic(err)
 	}
-	encoded := hex.EncodeToString(id)
+	encoded := hex.EncodeToString(id[:])
 	log.WithField("id", encoded).Debug("[core] peer connected")
 	web.peer.Store(rowId, encoded)
 	return &peerHandle{

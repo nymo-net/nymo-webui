@@ -100,6 +100,7 @@ func (w *webui) websocketHandle(conn *websocket.Conn, msgChan chan baseClient) {
 			}
 		case "meta":
 			m := metadata{
+				Version: nymo.Version(),
 				Address: w.user.Address().String(),
 				Servers: w.user.ListServers(),
 			}

@@ -19,8 +19,8 @@ listen_servers = []
 
 # Bootstrap peers to connect to
 bootstrap_peers = [
-  "udp://129.153.228.113:443",
-  "tcp://129.153.228.113:443",
+  "udp://a.nymo.network:443",
+  "tcp://a.nymo.network:443",
 ]
 
 [core] # nymo-core part

@@ -43,6 +43,7 @@ type setAlias struct {
 }
 
 type metadata struct {
+	Version string   `json:"version"`
 	Address string   `json:"address"`
 	Peers   []string `json:"peers"`
 	Servers []string `json:"servers"`
@@ -158,7 +159,7 @@ func (w *webui) newMessage(msg json.RawMessage) error {
 		w.broadcast("new_msg", nm)
 
 		sendTime := time.Now()
-		e = w.user.NewMessage(address, oriContent)
+		e = w.user.NewMessage(address, []byte(oriContent))
 		if e == nil {
 			_, e = w.db.Exec("UPDATE `dec_msg` SET `send_time`=? WHERE ROWID=?", sendTime.UnixMilli(), insertId)
 			if e != nil {
