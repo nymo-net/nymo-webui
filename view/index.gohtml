@@ -77,7 +77,10 @@
 {{define "contact" -}}
     <button type="button" class="list-group-item list-group-item-action text-truncate" data-id="{{.RowID}}"
             {{if .Alias}}data-alias="{{.Alias}}"{{end}}
-            data-addr="{{.Address | convertAddr}}"></button>{{end}}
+            data-addr="{{.Address | convertAddr}}"
+            {{- if .Message}}data-message="{{if .Self -}}You: {{end}}{{.Message}}"{{end}}>
+    </button>
+{{end}}
 
 {{define "message"}}{{- /*gotype: github.com/nymo-net/nymo-webui.msgRender*/ -}}
 {{if .Self -}}

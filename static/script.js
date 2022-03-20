@@ -89,6 +89,12 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
         } else {
             btn.innerText = `(${btn.dataset.addr})`;
         }
+        if (btn.dataset.message) {
+            const node = document.createElement('p');
+            node.className = 'm-0 small';
+            node.innerText = btn.dataset.message;
+            btn.insertAdjacentElement('beforeend', node);
+        }
     }
 
     function update_title(btn) {

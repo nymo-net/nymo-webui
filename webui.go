@@ -124,6 +124,8 @@ type contact struct {
 	RowID   uint
 	Address []byte
 	Alias   *string
+	Message *string
+	Self    *bool
 }
 
 type indexRender struct {
@@ -131,14 +133,19 @@ type indexRender struct {
 }
 
 func renderIndex(ctx context.Context, db *database, cr *indexRender) error {
-	q, err := db.QueryContext(ctx, "SELECT `rowid`, `key`, `alias` FROM `user` WHERE `rowid`>0")
+	q, err := db.QueryContext(ctx, "WITH `lmsg` AS (SELECT MAX(ROWID) AS `msg_id` FROM `dec_msg` GROUP BY `target`),"+
+		"`lmsg_c` AS (SELECT * FROM `dec_msg` JOIN `lmsg` ON `dec_msg`.ROWID = `lmsg`.`msg_id`)"+
+		"SELECT `rowid`, `key`, `alias`, `self`, `content` "+
+		"FROM `user` LEFT JOIN `lmsg_c` ON `rowid`=`target` "+
+		"WHERE `rowid`>0 ORDER BY `msg_id` DESC")
+
 	if err != nil {
 		return err
 	}
 
 	for q.Next() {
 		var c contact
-		if err := q.Scan(&c.RowID, &c.Address, &c.Alias); err != nil {
+		if err := q.Scan(&c.RowID, &c.Address, &c.Alias, &c.Self, &c.Message); err != nil {
 			return err
 		}
 		cr.Contacts = append(cr.Contacts, c)
