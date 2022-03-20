@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/nymo-net/nymo"
+	//"golang.org/x/tools/go/analysis/passes/stringintconv"
 )
 
 type webui struct {
@@ -124,6 +125,8 @@ type contact struct {
 	RowID   uint
 	Address []byte
 	Alias   *string
+	Message *string
+	Self    *bool
 }
 
 type indexRender struct {
@@ -131,14 +134,27 @@ type indexRender struct {
 }
 
 func renderIndex(ctx context.Context, db *database, cr *indexRender) error {
-	q, err := db.QueryContext(ctx, "SELECT `rowid`, `key`, `alias` FROM `user` WHERE `rowid`>0")
+	//q, err := db.QueryContext(ctx, "SELECT `rowid`, `key`, `alias` FROM `user` WHERE `rowid`>0")
+	
+	q, err := db.QueryContext(ctx, "With `latest_msg` As " +
+		"(SELECT `target`, MAX(`send_time`) AS `send_time` " +
+		"FROM `dec_msg` " +
+		"GROUP BY `target`), " +
+		"`latest_msg_with_content` As " +
+		"(SELECT `target`,`self`,`content`, `send_time` " +
+		"FROM `latest_msg` NATURAL JOIN `dec_msg` )" +
+	"SELECT `rowid`, `key`, `alias`, `self`, `content` " +
+	"FROM `user` LEFT JOIN `latest_msg_with_content` ON `rowid` == `target` " +
+	"WHERE `rowid`>0 " +
+	"ORDER BY `send_time` DESC")
+
 	if err != nil {
 		return err
 	}
 
 	for q.Next() {
 		var c contact
-		if err := q.Scan(&c.RowID, &c.Address, &c.Alias); err != nil {
+		if err := q.Scan(&c.RowID, &c.Address, &c.Alias, &c.Self, &c.Message); err != nil {
 			return err
 		}
 		cr.Contacts = append(cr.Contacts, c)
