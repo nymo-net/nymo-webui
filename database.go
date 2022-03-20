@@ -17,28 +17,20 @@ type database struct {
 	storeLock sync.Mutex
 }
 
-func (db *database) MessageStat(cohort uint32) (uint, uint) {
-	row := db.QueryRow(
-		"SELECT COUNT(CASE WHEN `cohort`=? THEN 1 END), COUNT(*) FROM `message` WHERE `msg` IS NOT NULL", cohort)
-	if row.Err() != nil {
-		log.Panic(row.Err())
-	}
-
-	var in, total uint
-	err := row.Scan(&in, &total)
+func (db *database) IgnoreMessage(digest *pb.Digest) {
+	_, err := db.Exec("INSERT OR IGNORE INTO `message` (`hash`,`cohort`,`deleted`) VALUES(?,?,TRUE)",
+		digest.Hash, digest.Cohort)
 	if err != nil {
 		log.Panic(err)
 	}
-
-	return in, total - in
 }
 
-func (db *database) ClientHandle(id []byte) nymo.PeerHandle {
-	rowId, err := getPeerRowId(db.DB, id)
+func (db *database) ClientHandle(id [8]byte) nymo.PeerHandle {
+	rowId, err := getPeerRowId(db.DB, id[:])
 	if err != nil {
 		log.Panic(err)
 	}
-	encoded := hex.EncodeToString(id)
+	encoded := hex.EncodeToString(id[:])
 	log.WithField("id", encoded).Debug("[core] client connected")
 	web.peer.Store(rowId, encoded)
 	return &peerHandle{db: db.DB, row: rowId}
@@ -63,8 +55,8 @@ func (db *database) EnumeratePeers() nymo.PeerEnumerate {
 	}
 }
 
-func (db *database) GetUrlByHash(urlHash []byte) (url string) {
-	row := db.QueryRow("SELECT `url` FROM `peer_link` WHERE `url_hash`=?", urlHash)
+func (db *database) GetUrlByHash(urlHash [8]byte) (url string) {
+	row := db.QueryRow("SELECT `url` FROM `peer_link` WHERE `url_hash`=?", urlHash[:])
 	if row.Err() != nil {
 		log.Panic(row.Err())
 	}
@@ -76,8 +68,8 @@ func (db *database) GetUrlByHash(urlHash []byte) (url string) {
 	return
 }
 
-func (db *database) GetMessage(hash []byte) (msg []byte, pow uint64) {
-	row := db.QueryRow("SELECT `msg`, `pow` FROM `message` WHERE `hash`=?", hash)
+func (db *database) GetMessage(hash [32]byte) (msg []byte, pow uint64) {
+	row := db.QueryRow("SELECT `msg`, `pow` FROM `message` WHERE `hash`=?", hash[:])
 	if row.Err() != nil {
 		log.Panic(row.Err())
 	}
@@ -89,11 +81,11 @@ func (db *database) GetMessage(hash []byte) (msg []byte, pow uint64) {
 	return
 }
 
-func (db *database) StoreMessage(hash []byte, c *pb.MsgContainer, f func() (cohort uint32, err error)) error {
+func (db *database) StoreMessage(hash [32]byte, c *pb.MsgContainer, f func() (cohort uint32, err error)) error {
 	db.storeLock.Lock()
 	defer db.storeLock.Unlock()
 
-	row := db.QueryRow("SELECT COUNT(*) FROM `message` WHERE `hash`=? AND `msg` IS NOT NULL", hash)
+	row := db.QueryRow("SELECT COUNT(*) FROM `message` WHERE `hash`=? AND `msg` IS NOT NULL", hash[:])
 	if row.Err() != nil {
 		return row.Err()
 	}
@@ -112,8 +104,8 @@ func (db *database) StoreMessage(hash []byte, c *pb.MsgContainer, f func() (coho
 		return err
 	}
 
-	_, err = db.Exec("REPLACE INTO `message` (`hash`,`msg`,`pow`,`cohort`) VALUES (?,?,?,?)",
-		hash, c.Msg, c.Pow, cohort)
+	_, err = db.Exec("INSERT INTO `message` (`hash`,`cohort`,`msg`,`pow`) VALUES (?,?,@msg,@pow) ON CONFLICT DO UPDATE SET `msg`=@msg,`pow`=@pow",
+		hash[:], cohort, sql.Named("msg", c.Msg), sql.Named("pow", c.Pow))
 	return err
 }
 
@@ -127,7 +119,7 @@ func (db *database) StoreDecryptedMessage(message *nymo.Message) {
 	if err != nil {
 		log.Panic(err)
 	}
-	go web.recvMessage(target, message.Content, message.SendTime)
+	go web.recvMessage(target, string(message.Content), message.SendTime)
 }
 
 func (db *database) getUserKey() ([]byte, error) {
@@ -209,11 +201,12 @@ CREATE TABLE "dec_msg"
 CREATE TABLE "message"
 (
 	"rowid" INTEGER PRIMARY KEY,
-	"hash" BLOB UNIQUE NOT NULL,
+	"hash" BLOB NOT NULL,
+	"cohort" INTEGER NOT NULL,
 	"msg" BLOB,
 	"pow" INTEGER,
-	"cohort" INTEGER NOT NULL,
-	"deleted" BOOLEAN DEFAULT FALSE NOT NULL
+	"deleted" BOOLEAN DEFAULT FALSE NOT NULL,
+	UNIQUE ("hash", "cohort")
 );
 
 CREATE TABLE "peer_link"

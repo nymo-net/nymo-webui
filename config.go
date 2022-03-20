@@ -49,12 +49,13 @@ type tomlConfig struct {
 	} `toml:"peer"`
 
 	Core struct {
-		MaxConcurrentConn *uint     `toml:"max_concurrent_conn"`
-		ListMessageTime   *duration `toml:"list_message_time"`
-		ScanPeerTime      *duration `toml:"scan_peer_time"`
-		PeerRetryTime     *duration `toml:"peer_retry_time"`
-		EnableLpa         bool      `toml:"enable_lp_announcement"`
-		EnableLpd         bool      `toml:"enable_lp_discovery"`
+		MaxInConn       *uint     `toml:"max_in_conn"`
+		MaxOutConn      *uint     `toml:"max_out_conn"`
+		ListMessageTime *duration `toml:"list_message_time"`
+		ScanPeerTime    *duration `toml:"scan_peer_time"`
+		PeerRetryTime   *duration `toml:"peer_retry_time"`
+		EnableLpa       bool      `toml:"enable_lp_announcement"`
+		EnableLpd       bool      `toml:"enable_lp_discovery"`
 	} `toml:"core"`
 }
 
@@ -114,8 +115,11 @@ func createTLSKeyPair() (e error) {
 
 func getCoreConfig() *nymo.Config {
 	cfg := nymo.DefaultConfig()
-	if config.Core.MaxConcurrentConn != nil {
-		cfg.MaxConcurrentConn = *config.Core.MaxConcurrentConn
+	if config.Core.MaxInConn != nil {
+		cfg.MaxInCohortConn = *config.Core.MaxInConn
+	}
+	if config.Core.MaxOutConn != nil {
+		cfg.MaxOutCohortConn = *config.Core.MaxOutConn
 	}
 	if config.Core.ListMessageTime != nil {
 		cfg.ListMessageTime = time.Duration(*config.Core.ListMessageTime)
