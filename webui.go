@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/nymo-net/nymo"
-	//"golang.org/x/tools/go/analysis/passes/stringintconv"
 )
 
 type webui struct {
@@ -134,19 +133,11 @@ type indexRender struct {
 }
 
 func renderIndex(ctx context.Context, db *database, cr *indexRender) error {
-	//q, err := db.QueryContext(ctx, "SELECT `rowid`, `key`, `alias` FROM `user` WHERE `rowid`>0")
-	
-	q, err := db.QueryContext(ctx, "With `latest_msg` As " +
-		"(SELECT `target`, MAX(`send_time`) AS `send_time` " +
-		"FROM `dec_msg` " +
-		"GROUP BY `target`), " +
-		"`latest_msg_with_content` As " +
-		"(SELECT `target`,`self`,`content`, `send_time` " +
-		"FROM `latest_msg` NATURAL JOIN `dec_msg` )" +
-	"SELECT `rowid`, `key`, `alias`, `self`, `content` " +
-	"FROM `user` LEFT JOIN `latest_msg_with_content` ON `rowid` == `target` " +
-	"WHERE `rowid`>0 " +
-	"ORDER BY `send_time` DESC")
+	q, err := db.QueryContext(ctx, "WITH `lmsg` AS (SELECT MAX(ROWID) AS `msg_id` FROM `dec_msg` GROUP BY `target`),"+
+		"`lmsg_c` AS (SELECT * FROM `dec_msg` JOIN `lmsg` ON `dec_msg`.ROWID = `lmsg`.`msg_id`)"+
+		"SELECT `rowid`, `key`, `alias`, `self`, `content` "+
+		"FROM `user` LEFT JOIN `lmsg_c` ON `rowid`=`target` "+
+		"WHERE `rowid`>0 ORDER BY `msg_id` DESC")
 
 	if err != nil {
 		return err
