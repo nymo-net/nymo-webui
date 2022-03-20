@@ -1,4 +1,3 @@
-
 'use strict';
 import * as ws from './ws.js';
 
@@ -86,7 +85,9 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
             btn.innerText = `(${btn.dataset.addr})`;
         }
         if (btn.dataset.message) {
-            btn.innerHTML += `<br> ${btn.dataset.from}: ${btn.dataset.message}`;
+            const node = document.createElement('small');
+            node.innerText = btn.dataset.message;
+            btn.insertAdjacentElement('beforeend', node);
         }
     }
 
