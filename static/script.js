@@ -42,21 +42,30 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
             history.innerHTML = content;
     });
 
-    ws.register('new_msg', function ({target, content}) {
+    ws.register('new_msg', function ({target, message, content}) {
         const ele = contacts.querySelector(`button.list-group-item[data-id="${target}"]`);
         if (ele.classList.contains('active'))
             history.insertAdjacentHTML('afterbegin', content);
+        if (message) {
+            ele.dataset.message = message;
+            update_name(ele);
+        }
         contacts.prepend(ele);
     });
 
     ws.register('msg_sent', function (data) {
-        if (data.err) { // TODO
-            console.error(data.err);
+        if (data.err) {
+            create_alert(data.err);
         }
-        if (current_target()?.dataset.id != data.target) return;
+        const ele = current_target();
+        if (ele?.dataset.id != data.target) return;
         history.querySelector(`div.justify-content-end[data-id="${data.id}"]`)?.remove();
         if (data.content)
             history.insertAdjacentHTML('afterbegin', data.content);
+        if (data.message) {
+            ele.dataset.message = "You: " + data.message;
+            update_name(ele);
+        }
     });
 
     ws.register('meta', function ({version, address, servers, peers}) {
@@ -163,7 +172,7 @@ ${content}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-l
         }
         chat_input.value = '';
         chat_input.style.height = '1em';
-        ws.send('new_msg', {target: target, content: val});
+        ws.send('new_msg', {target: target, message: val});
     });
 
     document.getElementById('info-btn').addEventListener('click', function () {

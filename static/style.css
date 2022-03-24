@@ -28,7 +28,7 @@ button.list-group-item {
     height: 1em;
 }
 
-div#history > div > div {
+div#history > div > div.rounded {
     width: fit-content;
     max-width: calc(min(100%, 480px));
 }

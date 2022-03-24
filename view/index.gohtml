@@ -42,7 +42,7 @@
 </div>
 <main class="row g-0">
     <div class="col-6 col-sm-5 col-lg-4 col-xl-3 border-end vh-100 d-flex flex-column">
-        <header class="mt-4 d-flex align-items-center flex-wrap px-4">
+        <header class="my-4 d-flex align-items-center flex-wrap px-4">
             <h3 class="user-select-none flex-fill m-0">Nymo</h3>
             <button type="button" class="btn p-0" id="info-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
@@ -55,7 +55,7 @@
                 </svg>
             </button>
         </header>
-        <div class="px-4"><input type="search" class="form-control my-3" placeholder="Search&hellip;"></div>
+        {{- /* <div class="px-4"><input type="search" class="form-control my-3" placeholder="Search&hellip;"></div> */ -}}
         <div class="px-2 overflow-auto" id="contacts">{{range .Contacts}}{{template "contact" .}}{{end}}</div>
     </div>
     <div id="chat" class="col-6 col-sm-7 col-lg-8 col-xl-9 card border-0 vh-100" style="display: none">
@@ -89,8 +89,9 @@
             <div class="bg-primary text-white bg-opacity-75 rounded py-2 px-3">{{.Content}}</div>
         </div>
     {{- else -}}
-        <div class="d-flex justify-content-end pb-4" data-id="{{.PrepareId}}">
-            <div class="bg-primary text-white bg-opacity-75 rounded py-2 px-3">Sending: {{.Content}}</div>
+        <div class="d-flex justify-content-end align-items-center pb-4" data-id="{{.PrepareId}}">
+            <div class="spinner-border me-3" role="status" title="Sending..."></div>
+            <div class="bg-primary text-white bg-opacity-25 rounded py-2 px-3">{{.Content}}</div>
         </div>
     {{- end}}
 {{else -}}

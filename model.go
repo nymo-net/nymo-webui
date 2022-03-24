@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/nymo-net/nymo"
@@ -15,6 +16,7 @@ type baseServer = [2]json.RawMessage
 
 type newMessage struct {
 	Target  interface{} `json:"target"`
+	Message string      `json:"message,omitempty"`
 	Content string      `json:"content"`
 }
 
@@ -34,6 +36,7 @@ func (w *webui) recvMessage(target uint, content string, sendTime time.Time) {
 	w.broadcast("new_msg", newMessage{
 		Target:  target,
 		Content: buf.String(),
+		Message: content,
 	})
 }
 
@@ -52,6 +55,7 @@ type metadata struct {
 type msgSent struct {
 	Target  uint    `json:"target"`
 	Id      int64   `json:"id"`
+	Message string  `json:"message,omitempty"`
 	Content string  `json:"content,omitempty"`
 	Err     *string `json:"err,omitempty"`
 }
@@ -65,7 +69,7 @@ func (w *webui) broadcast(action string, msg interface{}) {
 	}
 }
 
-func (w *webui) msgSent(target uint, id int64, content string, err error) {
+func (w *webui) msgSent(target uint, id int64, msg, content string, err error) {
 	var errStr *string
 	if err != nil {
 		errStr = new(string)
@@ -74,6 +78,7 @@ func (w *webui) msgSent(target uint, id int64, content string, err error) {
 	w.broadcast("msg_sent", msgSent{
 		Target:  target,
 		Id:      id,
+		Message: msg,
 		Content: content,
 		Err:     errStr,
 	})
@@ -95,6 +100,11 @@ func (w *webui) newMessage(msg json.RawMessage) error {
 	var nm newMessage
 	if err := json.Unmarshal(msg, &nm); err != nil {
 		return err
+	}
+
+	nm.Message = strings.TrimSpace(nm.Message)
+	if nm.Message == "" {
+		return errors.New("empty message")
 	}
 
 	var address *nymo.Address
@@ -133,7 +143,7 @@ func (w *webui) newMessage(msg json.RawMessage) error {
 		return fmt.Errorf("unknown receiver type %T", addr)
 	}
 
-	exec, err := w.db.Exec("INSERT INTO `dec_msg` (`target`,`self`,`content`) VALUES (?,TRUE,?)", nm.Target, nm.Content)
+	exec, err := w.db.Exec("INSERT INTO `dec_msg` (`target`,`self`,`content`) VALUES (?,TRUE,?)", nm.Target, nm.Message)
 	if err != nil {
 		return err
 	}
@@ -147,19 +157,20 @@ func (w *webui) newMessage(msg json.RawMessage) error {
 		var buf bytes.Buffer
 		e := indexTpl.ExecuteTemplate(&buf, "message", msgRender{
 			Self:      true,
-			Content:   nm.Content,
+			Content:   nm.Message,
 			PrepareId: insertId,
 		})
 		if e != nil {
 			log.Fatalf("[webui, template] %s", e)
 		}
-		oriContent := nm.Content
+		oriMsg := nm.Message
+		nm.Message = ""
 		nm.Content = buf.String()
 		buf.Reset()
 		w.broadcast("new_msg", nm)
 
 		sendTime := time.Now()
-		e = w.user.NewMessage(address, []byte(oriContent))
+		e = w.user.NewMessage(address, []byte(oriMsg))
 		if e == nil {
 			_, e = w.db.Exec("UPDATE `dec_msg` SET `send_time`=? WHERE ROWID=?", sendTime.UnixMilli(), insertId)
 			if e != nil {
@@ -167,7 +178,7 @@ func (w *webui) newMessage(msg json.RawMessage) error {
 			}
 			e = indexTpl.ExecuteTemplate(&buf, "message", msgRender{
 				Self:     true,
-				Content:  oriContent,
+				Content:  oriMsg,
 				SendTime: &sendTime,
 			})
 			if e != nil {
@@ -179,7 +190,7 @@ func (w *webui) newMessage(msg json.RawMessage) error {
 				log.Fatalf("[webui, db] %s", e)
 			}
 		}
-		w.msgSent(nm.Target.(uint), insertId, buf.String(), e)
+		w.msgSent(nm.Target.(uint), insertId, oriMsg, buf.String(), e)
 	}()
 
 	return nil
