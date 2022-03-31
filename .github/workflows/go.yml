@@ -1,0 +1,34 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.17
+
+    - name: Install GCC
+      uses: egor-tensin/setup-gcc@v1
+
+    - name: Build
+      run: go build -ldflags "-s -w" -trimpath -v .
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: webui
+        path: |
+          nymo-webui
+          config.toml
+          static/
+          view/
